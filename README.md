@@ -15,11 +15,12 @@ Este projeto implementa um sistema de comunicação entre processos onde as mens
 - **Comunicação TCP**: Conexões confiáveis entre processos
 
 ## 🏗️ Estrutura do Projeto
-multicasting/
-├── multicasting1.py # Processo com ID 0 (porta 5050)
-├── multicasting2.py # Processo com ID 1 (porta 5051)
-├── multicasting3.py # Processo com ID 2 (porta 5052)
-└── README.md
+
+    multicasting/
+    ├── multicasting1.py # Processo com ID 0 (porta 5050)
+    ├── multicasting2.py # Processo com ID 1 (porta 5051)
+    ├── multicasting3.py # Processo com ID 2 (porta 5052)
+    └── README.md
 
 
 ## 📦 Pré-requisitos
