@@ -49,7 +49,6 @@ def aplicacao(ack):
     if qtd_acks == 0: #achamos todos os acks para a mensagem cabeça de fila
         print("\nMENSAGEM DO SERVIDOR PARA A APLICAÇÃO: "+prim_mensagem[1]["corpo"]+"\n")
     else:
-        print("nao achamos todos os acks")
         fila_mensagens.put(prim_mensagem)
         for item in acks_removidos: #reinserindo os elementos na fila de acks
             fila_acks.put(item)
