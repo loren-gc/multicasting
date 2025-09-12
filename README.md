@@ -4,12 +4,12 @@ Implementação de um algoritmo de multicast totalmente ordenado para a discipli
 
 ## 📋 Descrição
 
-Este projeto implementa um sistema de comunicação entre processos onde as mensagens são entregues na mesma ordem para todos os participantes. O algoritmo garante ordenação total das mensagens usando relógios lógicos de Lamport e confirmações de recebimento.
+Este projeto implementa um sistema de comunicação entre processos onde as mensagens são entregues na mesma ordem para todos os participantes. O algoritmo garante ordenação total das mensagens usando relógios lógicos e confirmações de recebimento.
 
 ## ⚙️ Funcionalidades
 
 - **Multicast ordenado**: Mensagens entregues na mesma ordem para todos os processos
-- **Relógios lógicos**: Sincronização de eventos usando o algoritmo de Lamport
+- **Relógios lógicos**: Sincronização de eventos usando Clocks lógicos
 - **Confirmações (ACKs)**: Sistema de acks para garantir entrega ordenada
 - **Tolerância a atrasos**: Funciona mesmo quando acks chegam antes das mensagens originais
 - **Comunicação TCP**: Conexões confiáveis entre processos
