@@ -43,8 +43,12 @@ python3 multicasting2.py
 
 # Terminal 3 - Processo 2
 python3 multicasting3.py
+```
 
-# Exemplo de configuração no multicasting1.py
+3. **Exemplo de configuração no multicasting1.py:**
+
+```bash
 id_processo = 0
 portas_processos = [5051, 5052]  # Portas dos outros processos
 port_server = 5050  # Sua própria porta
+```
