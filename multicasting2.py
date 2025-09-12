@@ -118,6 +118,7 @@ def cliente():
             'id_unico': int(time.time() * 1000),    
             'id_processo': id_processo
         }
+        fila_mensagens.put((mensagem["clock"], mensagem))
         payload = json.dumps(mensagem).encode("utf-8")
     
         s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
