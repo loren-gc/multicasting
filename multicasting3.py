@@ -28,8 +28,29 @@ fila_acks = queue.Queue()
 
 ################################################### FUNCOES #############################################
 
+#ocorrendo uma mudança na cabel
+def aplicacao_mensagem(mensagem):
+    qtd_acks = 1
+    if mensagem[1]["id_processo"] == id_processo:
+        qtd_acks = 2
+    #contar quantos acks relativos a mensagem existem:
+    acks_removidos = []
+    tamanho = fila_acks.qsize()
+    for _ in range(tamanho):
+        item = fila_acks.get()
+        if item["id_unico"] == mensagem[1]["id_unico"]:
+            qtd_acks -= 1
+        acks_removidos.append(item)
+    if qtd_acks == 0: #a mensagem possui todos os acks correspondentes
+        print("\nMENSAGEM DO SERVIDOR PARA A APLICAÇÃO: "+mensagem[1]["corpo"]+"\n")
+        aplicacao_mensagem(fila_mensagens.get())
+    else:
+        fila_mensagens.put(mensagem)
+        for item in acks_removidos: #reinserindo os elementos na fila de acks
+            fila_acks.put(item)
+
 # ao receber um ack verificamos se existe uma mensagem pronta para ser entregue para a aplicação:
-def aplicacao(ack):
+def aplicacao_ack(ack):
     fila_acks.put(ack)
     prim_mensagem = fila_mensagens.get()
     if prim_mensagem[1]["id_unico"] != ack["id_unico"]:
@@ -48,12 +69,21 @@ def aplicacao(ack):
         acks_removidos.append(item)
     if qtd_acks == 0: #achamos todos os acks para a mensagem cabeça de fila
         print("\nMENSAGEM DO SERVIDOR PARA A APLICAÇÃO: "+prim_mensagem[1]["corpo"]+"\n")
+        if not fila_mensagens.empty():
+            aplicacao_mensagem(fila_mensagens.get())
     else:
         fila_mensagens.put(prim_mensagem)
         for item in acks_removidos: #reinserindo os elementos na fila de acks
             fila_acks.put(item)
-        return
-    
+
+def enviar_payload(payload):
+    s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s1.connect((ip_geral, portas_processos[0]))
+    s2.connect((ip_geral, portas_processos[1]))
+    s1.sendall(payload)
+    s2.sendall(payload)
+
 def enviar_acks(id_unico, processo):
     global clock_local
     with lock:
@@ -65,21 +95,23 @@ def enviar_acks(id_unico, processo):
         'id_processo': processo
     }
     payload = json.dumps(ack).encode("utf-8")
-    
-    s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s1.connect((ip_geral, portas_processos[0]))
-    s2.connect((ip_geral, portas_processos[1]))
-    s1.sendall(payload)
-    s2.sendall(payload)
+    enviar_payload(payload)
     
 def trata_mensagem(mensagem):
     if mensagem["tipo"] == "ack":
-        aplicacao(mensagem)
+        aplicacao_ack(mensagem)
     else:
+        topo_antes = None
+        if not fila_mensagens.empty():
+            topo_antes = fila_mensagens.get()
+            fila_mensagens.put(topo_antes)
         fila_mensagens.put((mensagem["clock"], mensagem))
+        topo_depois = fila_mensagens.get()
+        fila_mensagens.put(topo_depois)
         enviar_acks(mensagem["id_unico"], mensagem["id_processo"])
-        
+        if topo_antes != topo_depois:
+            aplicacao_mensagem(fila_mensagens.get())
+
 def manutencao_clock_local(clock_estrangeiro):
     global clock_local
     with lock:
@@ -120,14 +152,8 @@ def cliente():
         }
         fila_mensagens.put((mensagem["clock"], mensagem))
         payload = json.dumps(mensagem).encode("utf-8")
+        enviar_payload(payload)
     
-        s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s1.connect((ip_geral, portas_processos[0]))
-        s2.connect((ip_geral, portas_processos[1]))
-        s1.sendall(payload)
-        s2.sendall(payload)
-
 #################################################### MAIN ##################################################
 
 if __name__ == "__main__":
