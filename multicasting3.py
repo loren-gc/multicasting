@@ -28,7 +28,7 @@ fila_acks = queue.Queue()
 
 ################################################### FUNCOES #############################################
 
-#ocorrendo uma mudança na cabel
+#ocorrendo uma mudança no primeiro elemento da fila das mensagens:
 def aplicacao_mensagem(mensagem):
     qtd_acks = 1
     if mensagem[1]["id_processo"] == id_processo:
