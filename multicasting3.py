@@ -31,18 +31,18 @@ fila_acks = queue.Queue()
 #ocorrendo uma mudança no primeiro elemento da fila das mensagens:
 def aplicacao_mensagem(mensagem):
     qtd_acks = 1
-    if mensagem[1]["id_processo"] == id_processo:
+    if mensagem[2]["id_processo"] == id_processo:
         qtd_acks = 2
     #contar quantos acks relativos a mensagem existem:
     acks_removidos = []
     tamanho = fila_acks.qsize()
     for _ in range(tamanho):
         item = fila_acks.get()
-        if item["id_unico"] == mensagem[1]["id_unico"]:
+        if item["id_unico"] == mensagem[2]["id_unico"]:
             qtd_acks -= 1
         acks_removidos.append(item)
     if qtd_acks == 0: #a mensagem possui todos os acks correspondentes
-        print("\nMENSAGEM DO SERVIDOR PARA A APLICAÇÃO: "+mensagem[1]["corpo"]+"\n")
+        print("\nMENSAGEM DO SERVIDOR PARA A APLICAÇÃO: "+mensagem[2]["corpo"]+"\n")
         aplicacao_mensagem(fila_mensagens.get())
     else:
         fila_mensagens.put(mensagem)
@@ -53,7 +53,7 @@ def aplicacao_mensagem(mensagem):
 def aplicacao_ack(ack):
     fila_acks.put(ack)
     prim_mensagem = fila_mensagens.get()
-    if prim_mensagem[1]["id_unico"] != ack["id_unico"]:
+    if prim_mensagem[2]["id_unico"] != ack["id_unico"]:
         fila_mensagens.put(prim_mensagem)
         return
     qtd_acks = 1
@@ -64,11 +64,11 @@ def aplicacao_ack(ack):
     tamanho = fila_acks.qsize()
     for _ in range(tamanho):
         item = fila_acks.get()
-        if item["id_unico"] == prim_mensagem[1]["id_unico"]:
+        if item["id_unico"] == prim_mensagem[2]["id_unico"]:
             qtd_acks -= 1
         acks_removidos.append(item)
     if qtd_acks == 0: #achamos todos os acks para a mensagem cabeça de fila
-        print("\nMENSAGEM DO SERVIDOR PARA A APLICAÇÃO: "+prim_mensagem[1]["corpo"]+"\n")
+        print("\nMENSAGEM DO SERVIDOR PARA A APLICAÇÃO: "+prim_mensagem[2]["corpo"]+"\n")
         if not fila_mensagens.empty():
             aplicacao_mensagem(fila_mensagens.get())
     else:
@@ -105,13 +105,13 @@ def trata_mensagem(mensagem):
         if not fila_mensagens.empty():
             topo_antes = fila_mensagens.get()
             fila_mensagens.put(topo_antes)
-        fila_mensagens.put((mensagem["clock"], mensagem))
+        fila_mensagens.put((mensagem["clock"], mensagem["id_processo"], mensagem))
         topo_depois = fila_mensagens.get()
         fila_mensagens.put(topo_depois)
         enviar_acks(mensagem["id_unico"], mensagem["id_processo"])
         if topo_antes != topo_depois:
             aplicacao_mensagem(fila_mensagens.get())
-
+        
 def manutencao_clock_local(clock_estrangeiro):
     global clock_local
     with lock:
@@ -150,7 +150,7 @@ def cliente():
             'id_unico': int(time.time() * 1000),    
             'id_processo': id_processo
         }
-        fila_mensagens.put((mensagem["clock"], mensagem))
+        fila_mensagens.put((mensagem["clock"], mensagem["id_processo"], mensagem))
         payload = json.dumps(mensagem).encode("utf-8")
         enviar_payload(payload)
     
